@@ -1,0 +1,6 @@
+@BajoCero.Api_HostAddress = http://localhost:5188
+
+GET {{BajoCero.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Baja a Cero</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container my-4">
+        <h1 class="text-center">Baja a Cero</h1>
+        <!-- Sección para mostrar la partida -->
+        <div id="gameBoard" class="mb-3">
+            <!-- Aquí se mostrará el estado de la partida y la lista de jugadores -->
+        </div>
+
+        <!-- Sección para mostrar la mano de cartas -->
+        <div id="hand" class="d-flex justify-content-center">
+            <!-- Cada carta se renderizará aquí como un botón o imagen -->
+        </div>
+
+        <!-- Temporizador y otros elementos -->
+        <div id="timer" class="text-center mt-3">
+            <span>Tiempo restante: </span><span id="timeLeft">60</span> segundos
+        </div>
+    </div>
+
+    <!-- Agregar SignalR y nuestro script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        // Conectar al Hub de SignalR
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/gamehub")
+            .build();
+
+        connection.start()
+            .then(() => {
+                console.log("Conectado al hub");
+                // Una vez conectado, unirse a la partida (por ejemplo, usando un id obtenido de la API)
+                const gameId = prompt("Ingresa el ID de la partida:");
+                connection.invoke("JoinGame", gameId);
+            })
+            .catch(err => console.error(err.toString()));
+
+        // Escuchar mensajes del servidor
+        connection.on("ReceiveMessage", message => {
+            console.log("Mensaje del servidor: " + message);
+        });
+
+        connection.on("ReceivePlay", (connectionId, cardCode) => {
+            console.log(`El jugador ${connectionId} jugó la carta ${cardCode}`);
+            // Aquí puedes actualizar el estado de la partida en el frontend.
+        });
+
+        // Función para enviar la jugada
+        function playCard(cardCode) {
+            // gameId debe ser el mismo con el que te uniste
+            const gameId = "1"; // Reemplaza por el valor real
+            connection.invoke("PlayCard", gameId, cardCode)
+                .catch(err => console.error(err.toString()));
+        }
+
+        // Ejemplo: renderizar una mano de cartas (puedes obtener esta información desde la API o definirla localmente)
+        const handElement = document.getElementById("hand");
+        const cartas = ["AS", "2H", "KD", "JC", "10S"];  // Ejemplo de códigos de cartas
+        cartas.forEach(card => {
+            const btn = document.createElement("button");
+            btn.className = "btn btn-outline-primary m-1";
+            btn.innerText = card;
+            btn.onclick = () => playCard(card);
+            handElement.appendChild(btn);
+        });
+    </script>
+</body>
+
+</html>
